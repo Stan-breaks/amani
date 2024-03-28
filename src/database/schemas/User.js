@@ -1,10 +1,13 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  userName: {
+  firstName: {
     type: String,
     required: true,
-    unique: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
   },
   password: {
     type: String,
@@ -15,11 +18,31 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  number: {
+  phoneNumber: {
     type: String,
     required: true,
+    unique: true,
   },
-  admin: {
+  idNumber: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  shareAccount: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "ShareAccount",
+  },
+  savingsAccount: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SavingsAccount",
+  },
+  loans: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Loan",
+    },
+  ],
+  active: {
     type: Boolean,
     default: false,
   },

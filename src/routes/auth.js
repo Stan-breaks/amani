@@ -2,23 +2,46 @@ const { Router } = require("express");
 const router = Router();
 const User = require("../database/schemas/User");
 const { hashPassword, comparePassword } = require("../utils/helper");
+const { sendSMS } = require("../utils/sms");
 
 router.post("/register", async (req, res) => {
-  const { userName, email, number, password, confirmPassword } = req.body;
-  if (userName && email && number && password && confirmPassword) {
-    const user = await User.findOne({ $or: [{ userName }, { email }] });
+  const {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    idNumber,
+    password,
+    confirmPassword,
+  } = req.body;
+  if (
+    firstName &&
+    lastName &&
+    email &&
+    phoneNumber &&
+    idNumber &&
+    password &&
+    confirmPassword
+  ) {
+    const user = await User.findOne({ email });
     if (user) {
       res.status(400).send("User already exists");
     }
     if (password === confirmPassword) {
       const newUser = new User({
-        userName,
+        firstName,
+        lastName,
         email,
-        number,
+        phoneNumber,
+        idNumber,
         password: hashPassword(password),
       });
       await newUser.save();
       res.status(201).send("User created");
+      sendSMS(
+        `Hello ${firstName} to Amani sacco we will fill you in on more details of your account.\nThank you for choosing Amani sacco`,
+        phoneNumber,
+      );
     } else {
       res.status(400).send("Bad Request");
     }
@@ -27,37 +50,17 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  if (req.session.user) {
-    res.send("Aleardy logged in");
+router.post("/checkStatus", async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    res.status(400).send("User not found");
   } else {
-    if (email && password) {
-      const user = await User.findOne({ email });
-      if (!user) {
-        res.status(400).send("Bad Request");
-      } else {
-        if (comparePassword(password, user.password)) {
-          req.session.user = {
-            userName: user.userName,
-          };
-          res.status(200).send(req.session.user);
-        } else {
-          res.status(400).send("wrong credentials");
-        }
-      }
+    if (user.active) {
+      res.status(200).send({status:true});
     } else {
-      res.status(400).send("Bad Request");
+    res.status(200).send({status:false});
     }
-  }
-});
-
-router.post("/logout", async (req, res) => {
-  if (req.session.user) {
-    req.session.destroy();
-    res.status(200).send("Logged out");
-  } else {
-    res.status(400).send("Bad Request");
   }
 });
 

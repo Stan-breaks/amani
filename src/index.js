@@ -3,11 +3,12 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const app = express();
 const port = 3000;
-
+const cors = require("cors");
 //database
 require("./database");
 
 // middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -19,10 +20,14 @@ app.use(
   }),
 );
 
+// routes
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
+app.use("/payment", require("./routes/payment"));
+
 //auth routes
 app.use("/auth", require("./routes/auth"));
-
-// routes
 
 // start server
 app.listen(port, () => {
